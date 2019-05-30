@@ -1,0 +1,21 @@
+program Securibox
+
+include RC522
+
+
+sub procedure InitMain()
+  TRISA0_bit = 1                         ' Set RA0 pin as input
+  TRISA1_bit = 1                         ' Set RA1 pin as input
+  
+  'RC522_SS_PIN = 1
+  'RC522_RST_PIN = 0
+  ' MFRC522 accept upto 10MHz
+  SPI1_Init()                            ' Initialize SPI1 module
+end sub
+
+ 
+main:
+'   Main program
+    PCD_Init()
+
+end.

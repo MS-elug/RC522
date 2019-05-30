@@ -1,0 +1,142 @@
+module RC522
+' ******************
+' INTERFACE GLOBAL
+' ******************
+  ' Declarations section
+  'symbol RC522_SS_PIN = LATC.4
+  'symbol RC522_RST_PIN = LATC.4
+  
+
+ 
+  ' Page 1: Command
+  ' 						  0x10		' reserved for future use
+  symbol ModeReg				= 0x11 << 1	' defines general modes for transmitting and receiving
+  symbol TxModeReg				= 0x12 << 1	' defines transmission data rate and framing
+  symbol RxModeReg				= 0x13 << 1	' defines reception data rate and framing
+  symbol TxControlReg			        = 0x14 << 1	' controls the logical behavior of the antenna driver pins TX1 and TX2
+  symbol TxASKReg				= 0x15 << 1	' controls the setting of the transmission modulation
+  symbol TxSelReg				= 0x16 << 1	' selects the internal sources for the antenna driver
+  symbol RxSelReg				= 0x17 << 1	' selects internal receiver settings
+  symbol RxThresholdReg			        = 0x18 << 1	' selects thresholds for the bit decoder
+  symbol DemodReg				= 0x19 << 1	' defines demodulator settings
+  ' 						  0x1A			' reserved for future use
+  ' 						  0x1B			' reserved for future use
+  symbol MfTxReg				= 0x1C << 1	' controls some MIFARE communication transmit parameters
+  symbol MfRxReg				= 0x1D << 1	' controls some MIFARE communication receive parameters
+  ' 						  0x1E			' reserved for future use
+  symbol SerialSpeedReg			         = 0x1F << 1	' selects the speed of the serial UART interface
+
+  'Page 2: Configuration
+  ' 						  0x20			' reserved for future use
+  symbol CRCResultRegH			        = 0x21 << 1	' shows the MSB and LSB values of the CRC calculation
+  symbol CRCResultRegL			        = 0x22 << 1
+  ' 						  0x23			' reserved for future use
+  symbol ModWidthReg				= 0x24 << 1	' controls the ModWidth setting?
+  ' 						  0x25			' reserved for future use
+  symbol RFCfgReg				= 0x26 << 1	' configures the receiver gain
+  symbol GsNReg					= 0x27 << 1	' selects the conductance of the antenna driver pins TX1 and TX2 for modulation
+  symbol CWGsPReg				= 0x28 << 1	' defines the conductance of the p-driver output during periods of no modulation
+  symbol ModGsPReg				= 0x29 << 1	' defines the conductance of the p-driver output during periods of modulation
+  symbol TModeReg				= 0x2A << 1	' defines settings for the internal timer
+  symbol TPrescalerReg			        = 0x2B << 1	' the lower 8 bits of the TPrescaler value. The 4 high bits are in TModeReg.
+  symbol TReloadRegH				= 0x2C << 1	' defines the 16-bit timer reload value
+  symbol TReloadRegL				= 0x2D << 1
+  symbol TCounterValueRegH		        = 0x2E << 1	' shows the 16-bit timer value
+  symbol TCounterValueRegL		        = 0x2F << 1
+
+  ' Page 3: Test Registers
+  ' 						  0x30			' reserved for future use
+  symbol TestSel1Reg				= 0x31 << 1	' general test signal configuration
+  symbol TestSel2Reg				= 0x32 << 1	' general test signal configuration
+  symbol TestPinEnReg			        = 0x33 << 1	' enables pin output driver on pins D1 to D7
+  symbol TestPinValueReg			= 0x34 << 1	' defines the values for D1 to D7 when it is used as an I/O bus
+  symbol TestBusReg				= 0x35 << 1	' shows the status of the internal test bus
+  symbol AutoTestReg				= 0x36 << 1	' controls the digital self-test
+  symbol VersionReg				= 0x37 << 1	' shows the software version
+  symbol AnalogTestReg			        = 0x38 << 1	' controls the pins AUX1 and AUX2
+  symbol TestDAC1Reg				= 0x39 << 1	' defines the test value for TestDAC1
+  symbol TestDAC2Reg				= 0x3A << 1	' defines the test value for TestDAC2
+  symbol TestADCReg				= 0x3B << 1	' shows the value of ADC I and Q channels
+
+
+
+  dim RC522_SS_PIN as sbit at LATC.0
+  dim RC522_SS_PIN_TRIS as sbit at TRISC.0
+  dim RC522_RST_PIN as sbit at LATC.1
+  dim RC522_RST_PIN_TRIS as sbit at TRISC.1
+  
+  
+  ' Initializes the MFRC522 chip.
+  sub procedure PCD_Init
+  sub procedure PCD_WriteRegister(dim reg as byte, dim value as byte)
+  sub function  PCD_ReadRegister (dim reg as byte) as byte
+  sub procedure PCD_AntennaOn()
+  
+implements
+
+
+
+  ' Initializes the MFRC522 chip.
+  sub procedure PCD_Init()
+
+    RC522_SS_PIN = 1                   ' Release slave
+    RC522_SS_PIN_TRIS = 0              ' Set pin as Output
+    RC522_RST_PIN = 0                  ' Remove hard reset
+    RC522_SS_PIN_TRIS = 0              ' Set pin as Output
+    
+    ' Reset the chip (safe init)
+    RC522_RST_PIN = 0
+    Delay_us(2)
+    RC522_RST_PIN = 1
+    ' // Section 8.8.2 in the datasheet says the oscillator start-up time is the start up time of the crystal + 37,74µs. Let us be generous: 50ms.
+    Delay_ms(50)
+      
+      
+    ' Reset baud rates
+    PCD_WriteRegister(TxModeReg, 0x00)
+    PCD_WriteRegister(RxModeReg, 0x00)
+    ' Reset ModWidthReg
+    PCD_WriteRegister(ModWidthReg, 0x26)
+
+    ' When communicating with a PICC we need a timeout if something goes wrong.
+    ' f_timer = 13.56 MHz / (2*TPreScaler+1) where TPreScaler = [TPrescaler_Hi:TPrescaler_Lo].
+    ' TPrescaler_Hi are the four low bits in TModeReg. TPrescaler_Lo is TPrescalerReg.
+    PCD_WriteRegister(TModeReg, 0x80)	' TAuto=1; timer starts automatically at the end of the transmission in all communication modes at all speeds
+    PCD_WriteRegister(TPrescalerReg, 0xA9)' TPreScaler = TModeReg[3..0]:TPrescalerReg, ie 0x0A9 = 169 => f_timer=40kHz, ie a timer period of 25µs.
+    PCD_WriteRegister(TReloadRegH, 0x03)' Reload timer with 0x3E8 = 1000, ie 25ms before timeout.
+    PCD_WriteRegister(TReloadRegL, 0xE8)
+
+    PCD_WriteRegister(TxASKReg, 0x40)' Default 0x00. Force a 100 % ASK modulation independent of the ModGsPReg register setting
+    PCD_WriteRegister(ModeReg, 0x3D)' Default 0x3F. Set the preset value for the CRC coprocessor for the CalcCRC command to 0x6363 (ISO 14443-3 part 6.2.4)
+    PCD_AntennaOn()' Enable the antenna driver pins TX1 and TX2 (they were disabled by the reset)
+      
+  end sub
+  
+  sub procedure PCD_WriteRegister(dim reg as byte, dim value as byte)
+  	RC522_SS_PIN = 0		' Select slave
+	SPI_Write(reg)                  ' MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
+	SPI_Write(value)
+	RC522_SS_PIN = 1		' Release slave
+  end sub
+  
+  
+  sub function  PCD_ReadRegister(dim reg as byte) as byte
+      dim value as byte
+      RC522_SS_PIN = 0		' Select slave
+      SPI_Write(0x80 or reg)     ' MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
+      result = SPI_Read(0x00)  '  Read the value back. Send 0 to stop reading.
+      RC522_SS_PIN = 1		' Release slave
+  end sub
+  
+  
+'
+' Turns the antenna on by enabling pins TX1 and TX2.
+' After a reset these pins are disabled.
+  sub procedure PCD_AntennaOn()
+	dim value as byte 
+	value = PCD_ReadRegister(TxControlReg)
+	if ((value and 0x03) != 0x03) {
+	   PCD_WriteRegister(TxControlReg, value or 0x03)
+	}
+  end sub
+end.
