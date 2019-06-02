@@ -222,16 +222,16 @@ implements
 
         PCD_ClearRegisterBitMask(CollReg, 0x80) 'ValuesAfterColl=1 => Bits received after collision are cleared.
 	validBits = 7			 'For REQA and WUPA we need the short frame format - transmit only 7 bits of the last (and only) byte. TxLastBits = BitFramingReg[2..0]
-        status = PCD_TransceiveData(@cmd, 1, bufferATQA, bufferSize, @validBits)
-	if (status <> STATUS_OK) then
-                result = status
-		return
+        'TODODODODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOstatus = PCD_TransceiveData(@cmd, 1, bufferATQA, bufferSize, @validBits)
+        if (status <> STATUS_OK) then
+           result = status
+           return
         end if
-	if (bufferSize^ <> 2 or validBits <> 0) then 'ATQA must be exactly 16 bits.
-		result = STATUS_ERROR
-		return
+        if ((bufferSize^ <> 2) or (validBits <> 0)) then 'ATQA must be exactly 16 bits.
+           result = STATUS_ERROR
+           return
         end if
-	result = STATUS_OK;
+        result = STATUS_OK
   end sub
 
 '
