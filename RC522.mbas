@@ -11,109 +11,122 @@ module RC522
  ' MFRC522 registers. Described in chapter 9 of the datasheet.
  ' When using SPI all addresses are shifted one bit left in the "SPI address byte" (section 8.1.2.3)
  ' Page 0: Command and status
- '						  0x00		' reserved for future use
-  symbol CommandReg				= 0x01 << 1	' starts and stops command execution
-  symbol ComIEnReg				= 0x02 << 1	' enable and disable interrupt request control bits
-  symbol DivIEnReg				= 0x03 << 1	' enable and disable interrupt request control bits
-  symbol ComIrqReg				= 0x04 << 1	' interrupt request bits
-  symbol DivIrqReg				= 0x05 << 1	' interrupt request bits
-  symbol ErrorReg				= 0x06 << 1	' error bits showing the error status of the last command executed
-  symbol Status1Reg				= 0x07 << 1	' communication status bits
-  symbol Status2Reg				= 0x08 << 1	' receiver and transmitter status bits
-  symbol FIFODataReg				= 0x09 << 1	' input and output of 64 byte FIFO buffer
-  symbol FIFOLevelReg			        = 0x0A << 1	' number of bytes stored in the FIFO buffer
-  symbol WaterLevelReg			        = 0x0B << 1	' level for FIFO underflow and overflow warning
-  symbol ControlReg				= 0x0C << 1	' miscellaneous control registers
-  symbol BitFramingReg			        = 0x0D << 1	' adjustments for bit-oriented frames
-  symbol CollReg				= 0x0E << 1	' bit position of the first bit-collision detected on the RF interface
- '						  0x0F		' reserved for future use
+ '                                                  0x00                ' reserved for future use
+  symbol CommandReg                                = 0x01 << 1        ' starts and stops command execution
+  symbol ComIEnReg                                = 0x02 << 1        ' enable and disable interrupt request control bits
+  symbol DivIEnReg                                = 0x03 << 1        ' enable and disable interrupt request control bits
+  symbol ComIrqReg                                = 0x04 << 1        ' interrupt request bits
+  symbol DivIrqReg                                = 0x05 << 1        ' interrupt request bits
+  symbol ErrorReg                                = 0x06 << 1        ' error bits showing the error status of the last command executed
+  symbol Status1Reg                                = 0x07 << 1        ' communication status bits
+  symbol Status2Reg                                = 0x08 << 1        ' receiver and transmitter status bits
+  symbol FIFODataReg                                = 0x09 << 1        ' input and output of 64 byte FIFO buffer
+  symbol FIFOLevelReg                                = 0x0A << 1        ' number of bytes stored in the FIFO buffer
+  symbol WaterLevelReg                                = 0x0B << 1        ' level for FIFO underflow and overflow warning
+  symbol ControlReg                                = 0x0C << 1        ' miscellaneous control registers
+  symbol BitFramingReg                                = 0x0D << 1        ' adjustments for bit-oriented frames
+  symbol CollReg                                = 0x0E << 1        ' bit position of the first bit-collision detected on the RF interface
+ '                                                  0x0F                ' reserved for future use
   ' Page 1: Command
-  ' 						  0x10		' reserved for future use
-  symbol ModeReg				= 0x11 << 1	' defines general modes for transmitting and receiving
-  symbol TxModeReg				= 0x12 << 1	' defines transmission data rate and framing
-  symbol RxModeReg				= 0x13 << 1	' defines reception data rate and framing
-  symbol TxControlReg			        = 0x14 << 1	' controls the logical behavior of the antenna driver pins TX1 and TX2
-  symbol TxASKReg				= 0x15 << 1	' controls the setting of the transmission modulation
-  symbol TxSelReg				= 0x16 << 1	' selects the internal sources for the antenna driver
-  symbol RxSelReg				= 0x17 << 1	' selects internal receiver settings
-  symbol RxThresholdReg			        = 0x18 << 1	' selects thresholds for the bit decoder
-  symbol DemodReg				= 0x19 << 1	' defines demodulator settings
-  ' 						  0x1A		' reserved for future use
-  ' 						  0x1B		' reserved for future use
-  symbol MfTxReg				= 0x1C << 1	' controls some MIFARE communication transmit parameters
-  symbol MfRxReg				= 0x1D << 1	' controls some MIFARE communication receive parameters
-  ' 						  0x1E		' reserved for future use
-  symbol SerialSpeedReg			         = 0x1F << 1	' selects the speed of the serial UART interface
+  '                                                   0x10                ' reserved for future use
+  symbol ModeReg                                = 0x11 << 1        ' defines general modes for transmitting and receiving
+  symbol TxModeReg                                = 0x12 << 1        ' defines transmission data rate and framing
+  symbol RxModeReg                                = 0x13 << 1        ' defines reception data rate and framing
+  symbol TxControlReg                                = 0x14 << 1        ' controls the logical behavior of the antenna driver pins TX1 and TX2
+  symbol TxASKReg                                = 0x15 << 1        ' controls the setting of the transmission modulation
+  symbol TxSelReg                                = 0x16 << 1        ' selects the internal sources for the antenna driver
+  symbol RxSelReg                                = 0x17 << 1        ' selects internal receiver settings
+  symbol RxThresholdReg                                = 0x18 << 1        ' selects thresholds for the bit decoder
+  symbol DemodReg                                = 0x19 << 1        ' defines demodulator settings
+  '                                                   0x1A                ' reserved for future use
+  '                                                   0x1B                ' reserved for future use
+  symbol MfTxReg                                = 0x1C << 1        ' controls some MIFARE communication transmit parameters
+  symbol MfRxReg                                = 0x1D << 1        ' controls some MIFARE communication receive parameters
+  '                                                   0x1E                ' reserved for future use
+  symbol SerialSpeedReg                                 = 0x1F << 1        ' selects the speed of the serial UART interface
 
   'Page 2: Configuration
-  ' 						  0x20		' reserved for future use
-  symbol CRCResultRegH			        = 0x21 << 1	' shows the MSB and LSB values of the CRC calculation
-  symbol CRCResultRegL			        = 0x22 << 1
-  ' 						  0x23		' reserved for future use
-  symbol ModWidthReg				= 0x24 << 1	' controls the ModWidth setting?
-  ' 						  0x25		' reserved for future use
-  symbol RFCfgReg				= 0x26 << 1	' configures the receiver gain
-  symbol GsNReg					= 0x27 << 1	' selects the conductance of the antenna driver pins TX1 and TX2 for modulation
-  symbol CWGsPReg				= 0x28 << 1	' defines the conductance of the p-driver output during periods of no modulation
-  symbol ModGsPReg				= 0x29 << 1	' defines the conductance of the p-driver output during periods of modulation
-  symbol TModeReg				= 0x2A << 1	' defines settings for the internal timer
-  symbol TPrescalerReg			        = 0x2B << 1	' the lower 8 bits of the TPrescaler value. The 4 high bits are in TModeReg.
-  symbol TReloadRegH				= 0x2C << 1	' defines the 16-bit timer reload value
-  symbol TReloadRegL				= 0x2D << 1
-  symbol TCounterValueRegH		        = 0x2E << 1	' shows the 16-bit timer value
-  symbol TCounterValueRegL		        = 0x2F << 1
+  '                                                   0x20                ' reserved for future use
+  symbol CRCResultRegH                                = 0x21 << 1        ' shows the MSB and LSB values of the CRC calculation
+  symbol CRCResultRegL                                = 0x22 << 1
+  '                                                   0x23                ' reserved for future use
+  symbol ModWidthReg                                = 0x24 << 1        ' controls the ModWidth setting?
+  '                                                   0x25                ' reserved for future use
+  symbol RFCfgReg                                = 0x26 << 1        ' configures the receiver gain
+  symbol GsNReg                                        = 0x27 << 1        ' selects the conductance of the antenna driver pins TX1 and TX2 for modulation
+  symbol CWGsPReg                                = 0x28 << 1        ' defines the conductance of the p-driver output during periods of no modulation
+  symbol ModGsPReg                                = 0x29 << 1        ' defines the conductance of the p-driver output during periods of modulation
+  symbol TModeReg                                = 0x2A << 1        ' defines settings for the internal timer
+  symbol TPrescalerReg                                = 0x2B << 1        ' the lower 8 bits of the TPrescaler value. The 4 high bits are in TModeReg.
+  symbol TReloadRegH                                = 0x2C << 1        ' defines the 16-bit timer reload value
+  symbol TReloadRegL                                = 0x2D << 1
+  symbol TCounterValueRegH                        = 0x2E << 1        ' shows the 16-bit timer value
+  symbol TCounterValueRegL                        = 0x2F << 1
 
   ' Page 3: Test Registers
-  ' 						  0x30		' reserved for future use
-  symbol TestSel1Reg				= 0x31 << 1	' general test signal configuration
-  symbol TestSel2Reg				= 0x32 << 1	' general test signal configuration
-  symbol TestPinEnReg			        = 0x33 << 1	' enables pin output driver on pins D1 to D7
-  symbol TestPinValueReg			= 0x34 << 1	' defines the values for D1 to D7 when it is used as an I/O bus
-  symbol TestBusReg				= 0x35 << 1	' shows the status of the internal test bus
-  symbol AutoTestReg				= 0x36 << 1	' controls the digital self-test
-  symbol VersionReg				= 0x37 << 1	' shows the software version
-  symbol AnalogTestReg			        = 0x38 << 1	' controls the pins AUX1 and AUX2
-  symbol TestDAC1Reg				= 0x39 << 1	' defines the test value for TestDAC1
-  symbol TestDAC2Reg				= 0x3A << 1	' defines the test value for TestDAC2
-  symbol TestADCReg				= 0x3B << 1	' shows the value of ADC I and Q channels
+  '                                                   0x30                ' reserved for future use
+  symbol TestSel1Reg                                = 0x31 << 1        ' general test signal configuration
+  symbol TestSel2Reg                                = 0x32 << 1        ' general test signal configuration
+  symbol TestPinEnReg                                = 0x33 << 1        ' enables pin output driver on pins D1 to D7
+  symbol TestPinValueReg                        = 0x34 << 1        ' defines the values for D1 to D7 when it is used as an I/O bus
+  symbol TestBusReg                                = 0x35 << 1        ' shows the status of the internal test bus
+  symbol AutoTestReg                                = 0x36 << 1        ' controls the digital self-test
+  symbol VersionReg                                = 0x37 << 1        ' shows the software version
+  symbol AnalogTestReg                                = 0x38 << 1        ' controls the pins AUX1 and AUX2
+  symbol TestDAC1Reg                                = 0x39 << 1        ' defines the test value for TestDAC1
+  symbol TestDAC2Reg                                = 0x3A << 1        ' defines the test value for TestDAC2
+  symbol TestADCReg                                = 0x3B << 1        ' shows the value of ADC I and Q channels
 
   ' STATUS ##################################################################
-  symbol STATUS_OK = 0x00	' Success
-  symbol STATUS_ERROR = 0x01	' Error in communication
+  symbol STATUS_OK = 0x00        ' Success
+  symbol STATUS_ERROR = 0x01        ' Error in communication
   symbol STATUS_COLLISION = 0x02' Collission detected
-  symbol STATUS_TIMEOUT	= 0x03' Timeout in communication.
-  symbol STATUS_NO_ROOM	= 0x04' A buffer is not big enough.
-  symbol STATUS_INTERNAL_ERROR	= 0x05'Internal error in the code. Should not happen ;-)
-  symbol STATUS_INVALID	= 0x06' Invalid argument.
+  symbol STATUS_TIMEOUT        = 0x03' Timeout in communication.
+  symbol STATUS_NO_ROOM        = 0x04' A buffer is not big enough.
+  symbol STATUS_INTERNAL_ERROR        = 0x05'Internal error in the code. Should not happen ;-)
+  symbol STATUS_INVALID        = 0x06' Invalid argument.
   symbol STATUS_CRC_WRONG = 0x07' The CRC_A does not match
   symbol STATUS_MIFARE_NACK = 0xff'  A MIFARE PICC responded with NAK.
 
 
   ' ##########################################################################
   'The commands used by the PCD to manage communication with several PICCs (ISO 14443-3, Type A, section 6.4)
-  symbol PICC_CMD_REQA			= 0x26		'REQuest command, Type A. Invites PICCs in state IDLE to go to READY and prepare for anticollision or selection. 7 bit frame.
-  symbol PICC_CMD_WUPA			= 0x52		'Wake-UP command, Type A. Invites PICCs in state IDLE and HALT to go to READY(*) and prepare for anticollision or selection. 7 bit frame.
-  symbol PICC_CMD_CT				= 0x88		'Cascade Tag. Not really a command, but used during anti collision.
-  symbol PICC_CMD_SEL_CL1		= 0x93		'Anti collision/Select, Cascade Level 1
-  symbol PICC_CMD_SEL_CL2		= 0x95		'Anti collision/Select, Cascade Level 2
-  symbol PICC_CMD_SEL_CL3		= 0x97		'Anti collision/Select, Cascade Level 3
-  symbol PICC_CMD_HLTA			= 0x50		'HaLT command, Type A. Instructs an ACTIVE PICC to go to state HALT.
+  symbol PICC_CMD_REQA                        = 0x26                'REQuest command, Type A. Invites PICCs in state IDLE to go to READY and prepare for anticollision or selection. 7 bit frame.
+  symbol PICC_CMD_WUPA                        = 0x52                'Wake-UP command, Type A. Invites PICCs in state IDLE and HALT to go to READY(*) and prepare for anticollision or selection. 7 bit frame.
+  symbol PICC_CMD_CT                                = 0x88                'Cascade Tag. Not really a command, but used during anti collision.
+  symbol PICC_CMD_SEL_CL1                = 0x93                'Anti collision/Select, Cascade Level 1
+  symbol PICC_CMD_SEL_CL2                = 0x95                'Anti collision/Select, Cascade Level 2
+  symbol PICC_CMD_SEL_CL3                = 0x97                'Anti collision/Select, Cascade Level 3
+  symbol PICC_CMD_HLTA                        = 0x50                'HaLT command, Type A. Instructs an ACTIVE PICC to go to state HALT.
   symbol PICC_CMD_RATS           = 0xE0     'Request command for Answer To Reset.
-		' The commands used for MIFARE Classic (from http://www.mouser.com/ds/2/302/MF1S503x-89574.pdf, Section 9)
-		' Use PCD_MFAuthent to authenticate access to a sector, then use these commands to read/write/modify the blocks on the sector.
-		' The read/write commands can also be used for MIFARE Ultralight.
-  symbol PICC_CMD_MF_AUTH_KEY_A	= 0x60		' Perform authentication with Key A
-  symbol PICC_CMD_MF_AUTH_KEY_B	= 0x61		' Perform authentication with Key B
-  symbol PICC_CMD_MF_READ		= 0x30		' Reads one 16 byte block from the authenticated sector of the PICC. Also used for MIFARE Ultralight.
-  symbol PICC_CMD_MF_WRITE		= 0xA0		' Writes one 16 byte block to the authenticated sector of the PICC. Called "COMPATIBILITY WRITE" for MIFARE Ultralight.
-  symbol PICC_CMD_MF_DECREMENT	= 0xC0		' Decrements the contents of a block and stores the result in the internal data register.
-  symbol PICC_CMD_MF_INCREMENT	= 0xC1		' Increments the contents of a block and stores the result in the internal data register.
-  symbol PICC_CMD_MF_RESTORE		= 0xC2		' Reads the contents of a block into the internal data register.
-  symbol PICC_CMD_MF_TRANSFER	= 0xB0		' Writes the contents of the internal data register to a block.
-		' The commands used for MIFARE Ultralight (from http://www.nxp.com/documents/data_sheet/MF0ICU1.pdf, Section 8.6)
-		' The PICC_CMD_MF_READ and PICC_CMD_MF_WRITE can also be used for MIFARE Ultralight.
-  symbol PICC_CMD_UL_WRITE		= 0xA2		' Writes one 4 byte page to the PICC.
-		
+                ' The commands used for MIFARE Classic (from http://www.mouser.com/ds/2/302/MF1S503x-89574.pdf, Section 9)
+                ' Use PCD_MFAuthent to authenticate access to a sector, then use these commands to read/write/modify the blocks on the sector.
+                ' The read/write commands can also be used for MIFARE Ultralight.
+  symbol PICC_CMD_MF_AUTH_KEY_A        = 0x60                ' Perform authentication with Key A
+  symbol PICC_CMD_MF_AUTH_KEY_B        = 0x61                ' Perform authentication with Key B
+  symbol PICC_CMD_MF_READ                = 0x30                ' Reads one 16 byte block from the authenticated sector of the PICC. Also used for MIFARE Ultralight.
+  symbol PICC_CMD_MF_WRITE                = 0xA0                ' Writes one 16 byte block to the authenticated sector of the PICC. Called "COMPATIBILITY WRITE" for MIFARE Ultralight.
+  symbol PICC_CMD_MF_DECREMENT        = 0xC0                ' Decrements the contents of a block and stores the result in the internal data register.
+  symbol PICC_CMD_MF_INCREMENT        = 0xC1                ' Increments the contents of a block and stores the result in the internal data register.
+  symbol PICC_CMD_MF_RESTORE                = 0xC2                ' Reads the contents of a block into the internal data register.
+  symbol PICC_CMD_MF_TRANSFER        = 0xB0                ' Writes the contents of the internal data register to a block.
+                ' The commands used for MIFARE Ultralight (from http://www.nxp.com/documents/data_sheet/MF0ICU1.pdf, Section 8.6)
+                ' The PICC_CMD_MF_READ and PICC_CMD_MF_WRITE can also be used for MIFARE Ultralight.
+  symbol PICC_CMD_UL_WRITE                = 0xA2                ' Writes one 4 byte page to the PICC.
+ 
+ 
+  'MFRC522 commands. Described in chapter 10 of the datasheet.
+  symbol PCD_Idle                    = 0x00              ' no action, cancels current command execution
+  symbol PCD_Mem                     = 0x01              ' stores 25 bytes into the internal buffer
+  symbol PCD_GenerateRandomID        = 0x02              ' generates a 10-byte random ID number
+  symbol PCD_CalcCRC                 = 0x03              ' activates the CRC coprocessor or performs a self-test
+  symbol PCD_Transmit                = 0x04              ' transmits data from the FIFO buffer
+  symbol PCD_NoCmdChange             = 0x07              ' no command change, can be used to modify the CommandReg register bits without affecting the command, for example, the PowerDown bit
+  symbol PCD_Receive                 = 0x08              ' activates the receiver circuits
+  symbol PCD_Transceive              = 0x0C              ' transmits data from FIFO buffer to antenna and automatically activates the receiver after transmission
+  symbol PCD_MFAuthent               = 0x0E              ' performs the MIFARE standard authentication as a reader
+  symbol PCD_SoftReset               = 0x0F              ' resets the MFRC522
+                
   dim RC522_SS_PIN as sbit at LATC.0
   dim RC522_SS_PIN_TRIS as sbit at TRISC.0
   dim RC522_RST_PIN as sbit at LATC.1
@@ -123,12 +136,19 @@ module RC522
   ' Initializes the MFRC522 chip.
   sub procedure PCD_Init
   sub procedure PCD_WriteRegister(dim reg as byte, dim value as byte)
-  sub function  PCD_ReadRegister (dim reg as byte) as byte
+  sub procedure PCD_WriteRegisterBuffer(dim reg as byte,dim count as byte, dim values as ^byte)
+  sub function PCD_ReadRegister (dim reg as byte) as byte
+  sub procedure PCD_ReadRegisterBuffer(dim reg as byte,dim count as byte,dim values as ^byte,dim rxAlign as byte)
+  sub procedure PCD_SetRegisterBitMask(dim reg as byte, dim mask as byte)
   sub procedure PCD_ClearRegisterBitMask(dim reg as byte, dim mask as byte)
   sub function PICC_RequestA(dim bufferATQA as ^byte, dim bufferSize as ^byte) as byte
-  sub function PICC_REQA_or_WUPA(	dim cmd as byte,dim bufferATQA as ^byte, dim bufferSize as ^byte) as byte
+  sub function PICC_REQA_or_WUPA(        dim cmd as byte,dim bufferATQA as ^byte, dim bufferSize as ^byte) as byte
   sub procedure PCD_AntennaOn()
   sub function PICC_IsNewCardPresent() as boolean
+  
+  sub function PCD_TransceiveData(dim sendData as ^byte,dim sendLen as byte,dim backData as ^byte,dim backLen as ^byte,dim validBits as ^byte,dim rxAlign as byte,dim checkCRC as boolean) as byte
+  sub function PCD_CommunicateWithPICC(  dim cmd as byte,dim waitIRq as byte,dim sendData as ^byte,dim sendLen as byte,dim backData as ^byte,dim backLen as ^byte,dim validBits as ^byte,dim rxAlign as byte,dim checkCRC as boolean) as byte
+
 implements
 
 
@@ -158,7 +178,7 @@ implements
     ' When communicating with a PICC we need a timeout if something goes wrong.
     ' f_timer = 13.56 MHz / (2*TPreScaler+1) where TPreScaler = [TPrescaler_Hi:TPrescaler_Lo].
     ' TPrescaler_Hi are the four low bits in TModeReg. TPrescaler_Lo is TPrescalerReg.
-    PCD_WriteRegister(TModeReg, 0x80)	' TAuto=1; timer starts automatically at the end of the transmission in all communication modes at all speeds
+    PCD_WriteRegister(TModeReg, 0x80)        ' TAuto=1; timer starts automatically at the end of the transmission in all communication modes at all speeds
     PCD_WriteRegister(TPrescalerReg, 0xA9)' TPreScaler = TModeReg[3..0]:TPrescalerReg, ie 0x0A9 = 169 => f_timer=40kHz, ie a timer period of 25µs.
     PCD_WriteRegister(TReloadRegH, 0x03)' Reload timer with 0x3E8 = 1000, ie 25ms before timeout.
     PCD_WriteRegister(TReloadRegL, 0xE8)
@@ -168,23 +188,98 @@ implements
     PCD_AntennaOn()' Enable the antenna driver pins TX1 and TX2 (they were disabled by the reset)
       
   end sub
-  
+ 
+  ' Writes a byte to the specified register in the MFRC522 chip.
+  ' The interface is described in the datasheet section 8.1.2.
+  ' reg < The register to write to. One of the PCD_Register enums.
+  ' value < The value to write.
   sub procedure PCD_WriteRegister(dim reg as byte, dim value as byte)
-  	RC522_SS_PIN = 0		' Select slave
-	SPI_Write(reg)                  ' MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
-	SPI_Write(value)
-	RC522_SS_PIN = 1		' Release slave
+        RC522_SS_PIN = 0              ' Select slave
+        SPI_Write(reg)                  ' MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
+        SPI_Write(value)
+        RC522_SS_PIN = 1                ' Release slave
   end sub
   
-  
+
+  ' Writes a number of bytes to the specified register in the MFRC522 chip.
+  ' The interface is described in the datasheet section 8.1.2.
+  ' reg < The register to write to. One of the PCD_Register enums.
+  ' count < The number of bytes to write to the register
+  ' *vlues < The values to write. Byte array.
+  sub procedure PCD_WriteRegisterBuffer(dim reg as byte,dim count as byte, dim values as ^byte)
+        dim i as byte
+        RC522_SS_PIN = 0              ' Select slave
+        SPI_Write(reg)                'MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
+        for i = 0 to count
+            SPI_Write(values^) ' Write element
+            Inc(values) ' Move to next element in array
+        next i
+        RC522_SS_PIN = 1                ' Release slave
+  end sub
+
+
   sub function  PCD_ReadRegister(dim reg as byte) as byte
       dim value as byte
-      RC522_SS_PIN = 0		' Select slave
+      RC522_SS_PIN = 0                ' Select slave
       SPI_Write(0x80 or reg)     ' MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
       result = SPI_Read(0x00)  '  Read the value back. Send 0 to stop reading.
-      RC522_SS_PIN = 1		' Release slave
+      RC522_SS_PIN = 1                ' Release slave
   end sub
+ 
+ ' Reads a number of bytes from the specified register in the MFRC522 chip.
+ ' The interface is described in the datasheet section 8.1.2.
+ ' reg < The register to read from. One of the PCD_Register enums.
+ ' count < The number of bytes to read
+ ' *values < Byte array to store the values in.
+ ' rxAlign < Only bit positions rxAlign..7 in values[0] are updated.
+ sub procedure PCD_ReadRegisterBuffer(dim reg as byte,dim count as byte,dim values as ^byte,dim rxAlign as byte)
+  dim address as byte
+  dim index as byte
+  dim mask as byte
+  dim value as byte
+  dim ptr as ^byte
   
+  if (count = 0) then
+     return
+  end if
+
+  address = 0x80 or reg				' MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
+  index = 0					' Index in values array.
+
+  RC522_SS_PIN = 0                              ' Select slave
+  Dec(count)					' One read is performed outside of the loop
+  SPI_Write(address)				' Tell MFRC522 which address we want to read
+  
+  if (rxAlign) then		                ' Only update bit positions rxAlign..7 in values[0]
+    ' Create bit mask for bit positions rxAlign..7
+    mask = (0xFF << rxAlign) and 0xFF
+    ' Read value and tell that we want to read the same address again.
+    value = SPI_Read(address)
+    ' Apply mask to both current value of values[0] and the new data in value.
+    ptr = values
+    ptr^ = (ptr^ and not(mask)) or (value and mask)
+    Inc(index)
+  end if
+  
+  while (index < count)
+    ptr = values + index
+    ptr^ = SPI_Read(address)	' Read value and tell that we want to read the same address again.
+    Inc(index)
+  wend
+  ptr = values + index
+  ptr^ = SPI_Read(0)			' Read the final byte. Send 0 to stop reading.
+  RC522_SS_PIN = 1                ' Release slave
+ end sub
+ 
+' Sets the bits given in mask in register reg.
+' reg < The register to update. One of the PCD_Register enums.
+' mask< The bits to set.
+ sub procedure PCD_SetRegisterBitMask(dim reg as byte, dim mask as byte)
+	dim tmp as byte
+	tmp = PCD_ReadRegister(reg)
+	PCD_WriteRegister(reg, tmp or mask)	'set bit mask
+ end sub
+
 
 ' Clears the bits given in mask from register reg.
 ' reg < The register to update. One of the PCD_Register enums
@@ -193,7 +288,7 @@ implements
   sub procedure PCD_ClearRegisterBitMask(dim reg as byte, dim mask as byte)
     dim tmp as byte
     tmp = PCD_ReadRegister(reg)
-    PCD_WriteRegister(reg, tmp and (not(mask)))	'clear bit mask
+    PCD_WriteRegister(reg, tmp and (not(mask)))        'clear bit mask
   end sub
 
 ' Transmits a REQuest command, Type A. Invites PICCs in state IDLE to go to READY and prepare for anticollision or selection. 7 bit frame.
@@ -213,16 +308,16 @@ implements
   '  bufferSize < Buffer size, at least two bytes. Also number of bytes returned if STATUS_OK.
   '
    sub function PICC_REQA_or_WUPA(dim cmd as byte,dim bufferATQA as ^byte, dim bufferSize as ^byte) as byte
-    	dim validBits as byte
+            dim validBits as byte
         dim status as byte
-	if ((bufferATQA = 0) or (bufferSize^ < 2)) then	'The ATQA response is 2 bytes long.
-		result = STATUS_NO_ROOM
-		return
+        if ((bufferATQA = 0) or (bufferSize^ < 2)) then        'The ATQA response is 2 bytes long.
+                result = STATUS_NO_ROOM
+                return
         end if
 
         PCD_ClearRegisterBitMask(CollReg, 0x80) 'ValuesAfterColl=1 => Bits received after collision are cleared.
-	validBits = 7			 'For REQA and WUPA we need the short frame format - transmit only 7 bits of the last (and only) byte. TxLastBits = BitFramingReg[2..0]
-        'TODODODODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOstatus = PCD_TransceiveData(@cmd, 1, bufferATQA, bufferSize, @validBits)
+        validBits = 7                         'For REQA and WUPA we need the short frame format - transmit only 7 bits of the last (and only) byte. TxLastBits = BitFramingReg[2..0]
+        status = PCD_TransceiveData(@cmd, 1, bufferATQA, bufferSize, @validBits,0,false)
         if (status <> STATUS_OK) then
            result = status
            return
@@ -265,5 +360,118 @@ implements
     reqResult = PICC_RequestA(@bufferATQA, @bufferSize)
     result = ((reqResult = STATUS_OK) or (reqResult = STATUS_COLLISION) )
   end sub
+
+
+'/////////////////////////////////////////////////////////////////////////////////////
+'// Functions for communicating with PICCs
+'/////////////////////////////////////////////////////////////////////////////////////
+'
+'Executes the Transceive command.
+'CRC validation can only be done if backData and backLen are specified.
+'sendData< Pointer to the data to transfer to the FIFO.
+'sendLen< Number of bytes to transfer to the FIFO.
+'backData< nullptr or pointer to buffer if data should be read back after executing the command.
+'backLen< In: Max number of bytes to write to *backData. Out: The number of bytes returned.
+'validBits < In/Out: The number of valid bits in the last byte. 0 for 8 valid bits. Default nullptr.
+'rxAlign< In: Defines the bit position in backData[0] for the first bit received. Default 0.
+'checkCRC< In: True => The last two bytes of the response is assumed to be a CRC_A that must be validated.
+'
+
+sub function PCD_TransceiveData(dim sendData as ^byte,dim sendLen as byte,dim backData as ^byte,dim backLen as ^byte,dim validBits as ^byte,dim rxAlign as byte,dim checkCRC as boolean) as byte
+   dim waitIRq as byte
+   waitIRq = 0x30        'RxIRq and IdleIRq
+   result = PCD_CommunicateWithPICC(PCD_Transceive, waitIRq, sendData, sendLen, backData, backLen, validBits, rxAlign, checkCRC)
+end sub
+
+
+' Transfers data to the MFRC522 FIFO, executes a command, waits for completion and transfers data back from the FIFO.
+' CRC validation can only be done if backData and backLen are specified.
+' command< The command to execute. One of the PCD_Command enums.
+' waitIRq< The bits in the ComIrqReg register that signals successful completion of the command.
+
+sub function PCD_CommunicateWithPICC(  dim cmd as byte,dim waitIRq as byte,dim sendData as ^byte,dim sendLen as byte,dim backData as ^byte,dim backLen as ^byte,dim validBits as ^byte,dim rxAlign as byte,dim checkCRC as boolean) as byte
+        ' Prepare values for BitFramingReg
+        dim txLastBits as byte
+        dim bitFraming as byte
+        dim i as word
+        dim errorRegValue as byte
+        dim _validBits as byte
+        dim n as byte
+        
+        if(validBits) then
+          txLastBits = validBits^
+        else
+          txLastBits = 0
+        end if
+
+        bitFraming = (rxAlign << 4) + txLastBits                       ' RxAlign = BitFramingReg[6..4]. TxLastBits = BitFramingReg[2..0]
+
+        PCD_WriteRegister(CommandReg, PCD_Idle)                        ' Stop any active command.
+        PCD_WriteRegister(ComIrqReg, 0x7F)                             ' Clear all seven interrupt request bits
+        PCD_WriteRegister(FIFOLevelReg, 0x80)                          ' FlushBuffer = 1, FIFO initialization
+        PCD_WriteRegisterBuffer(FIFODataReg, sendLen, sendData)              ' Write sendData to the FIFO
+        PCD_WriteRegister(BitFramingReg, bitFraming)                   ' Bit adjustments
+        PCD_WriteRegister(CommandReg, cmd)                             ' Execute the command
+        
+        if (cmd = PCD_Transceive) then
+            PCD_SetRegisterBitMask(BitFramingReg, 0x80)            ' StartSend=1, transmission of data starts
+        end if
+
+        ' Wait for the command to complete.
+        ' In PCD_Init() we set the TAuto flag in TModeReg. This means the timer automatically starts when the PCD stops transmitting.
+        ' Each iteration of the do-while-loop takes 17.86µs.
+        ' TODO check/modify for other architectures than Arduino Uno 16bit
+        for i = 2000 to 0 step -1
+            n = PCD_ReadRegister(ComIrqReg)         ' ComIrqReg[7..0] bits are: Set1 TxIRq RxIRq IdleIRq HiAlertIRq LoAlertIRq ErrIRq TimerIRq
+            if (n and waitIRq) then                       ' One of the interrupts that signal success has been set.
+                break
+            end if
+            if (n and 0x01) then                          ' Timer interrupt - nothing received in 25ms
+                result = STATUS_TIMEOUT
+                return
+            end if
+        next i
+
+        ' 35.7ms and nothing happend. Communication with the MFRC522 might be down.
+        if (i = 0) then
+           result = STATUS_TIMEOUT
+           return
+        end if
+
+        ' Stop now if any errors except collisions were detected.
+        errorRegValue = PCD_ReadRegister(ErrorReg) ' ErrorReg[7..0] bits are: WrErr TempErr reserved BufferOvfl CollErr CRCErr ParityErr ProtocolErr
+        if (errorRegValue and 0x13) then         ' BufferOvfl ParityErr ProtocolErr
+            result = STATUS_ERROR
+            return
+        end if
+
+        _validBits = 0
+
+        ' If the caller wants data back, get it from the MFRC522.
+        if (backData) then
+            if(backLen) then
+                n = PCD_ReadRegister(FIFOLevelReg)        ' Number of bytes in the FIFO
+                if (n > backLen^) then
+                    result = STATUS_NO_ROOM
+                    return
+                end if
+                backLen^ = n                                               ' Number of bytes returned
+                PCD_ReadRegisterBuffer(FIFODataReg, n, backData, rxAlign)        ' Get received data from FIFO
+                _validBits = PCD_ReadRegister(ControlReg) and 0x07            ' RxLastBits[2:0] indicates the number of valid bits in the last received byte. If this value is 000b, the whole byte is valid.
+                if (validBits) then
+                        validBits^ = _validBits
+                end if
+            end if
+        end if
+
+        ' Tell about collisions
+        if (errorRegValue and 0x08) then                'CollErr
+           result = STATUS_COLLISION
+           return
+        end if
+
+        result = STATUS_OK
+        return
+end sub
 
 end.
