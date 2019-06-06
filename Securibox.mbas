@@ -21,7 +21,7 @@ include RC522
 sub procedure initMain()
    TRISA = 0x00                   ' A en sortie
    TRISB = 0x00                   ' B en sortie
-   TRISC = 0x00 '%10000000                   ' C en sortie
+   TRISC = %00010000                   ' C en sortie
 
    PORTA = 0x00                   ' initialize Port A
    PORTB = 0x00                   ' initialize Port B
@@ -51,9 +51,9 @@ sub procedure initMain()
   'RC522_SS_PIN = 1
   'RC522_RST_PIN = 0
   ' MFRC522 accept upto 10MHz
-  SPI1_Init()                            ' Initialize SPI1 module
+  SPI1_Init_Advanced(_SPI_MASTER_OSC_DIV64, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_LOW_2_HIGH)                            ' Initialize SPI1 module
   PCD_Init()
-  UART1_Init(9600)
+  'UART1_Init(9600)
 end sub
 
  
@@ -65,12 +65,17 @@ main:
 
      ' Fait clignoter la LED de status
    for i=1 to 500
-     LATC.1 = 1                                     ' Led en vert
-     delay_ms(1000)
-     LATC.1 = 0
-     delay_ms(1000)
+                                        ' Led en vert
+     delay_ms(500)
+     if(PICC_IsNewCardPresent()) then
+          LATC.1 = 1
+     else
+           LATC.1 = 0
+     end if
 
-  UART1_Write_Text("Ready")
+     delay_ms(500)
+
+  'UART1_Write_Text("Ready")
   'UART1_Write(10)                      ' Line Feed
   'UART1_Write(13)
   next i

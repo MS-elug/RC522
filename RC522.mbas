@@ -210,7 +210,7 @@ implements
         dim i as byte
         RC522_SS_PIN = 0              ' Select slave
         SPI_Write(reg)                'MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
-        for i = 0 to count
+        for i = 0 to count-1
             SPI_Write(values^) ' Write element
             Inc(values) ' Move to next element in array
         next i
@@ -240,7 +240,7 @@ implements
   dim ptr as ^byte
   
   if (count = 0) then
-     return
+     exit
   end if
 
   address = 0x80 or reg				' MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
@@ -275,9 +275,10 @@ implements
 ' reg < The register to update. One of the PCD_Register enums.
 ' mask< The bits to set.
  sub procedure PCD_SetRegisterBitMask(dim reg as byte, dim mask as byte)
-	dim tmp as byte
-	tmp = PCD_ReadRegister(reg)
-	PCD_WriteRegister(reg, tmp or mask)	'set bit mask
+   dim tmp as byte
+
+   tmp = PCD_ReadRegister(reg)  ' 0x1A
+   PCD_WriteRegister(reg, tmp or mask)	'set bit mask
  end sub
 
 
@@ -308,23 +309,26 @@ implements
   '  bufferSize < Buffer size, at least two bytes. Also number of bytes returned if STATUS_OK.
   '
    sub function PICC_REQA_or_WUPA(dim cmd as byte,dim bufferATQA as ^byte, dim bufferSize as ^byte) as byte
-            dim validBits as byte
+        dim validBits as byte
         dim status as byte
+
         if ((bufferATQA = 0) or (bufferSize^ < 2)) then        'The ATQA response is 2 bytes long.
                 result = STATUS_NO_ROOM
-                return
+                exit
         end if
 
         PCD_ClearRegisterBitMask(CollReg, 0x80) 'ValuesAfterColl=1 => Bits received after collision are cleared.
         validBits = 7                         'For REQA and WUPA we need the short frame format - transmit only 7 bits of the last (and only) byte. TxLastBits = BitFramingReg[2..0]
         status = PCD_TransceiveData(@cmd, 1, bufferATQA, bufferSize, @validBits,0,false)
+
+        
         if (status <> STATUS_OK) then
            result = status
-           return
+           exit
         end if
         if ((bufferSize^ <> 2) or (validBits <> 0)) then 'ATQA must be exactly 16 bits.
            result = STATUS_ERROR
-           return
+           exit
         end if
         result = STATUS_OK
   end sub
@@ -408,14 +412,18 @@ sub function PCD_CommunicateWithPICC(  dim cmd as byte,dim waitIRq as byte,dim s
 
         PCD_WriteRegister(CommandReg, PCD_Idle)                        ' Stop any active command.
         PCD_WriteRegister(ComIrqReg, 0x7F)                             ' Clear all seven interrupt request bits
+
         PCD_WriteRegister(FIFOLevelReg, 0x80)                          ' FlushBuffer = 1, FIFO initialization
+
         PCD_WriteRegisterBuffer(FIFODataReg, sendLen, sendData)              ' Write sendData to the FIFO
+
         PCD_WriteRegister(BitFramingReg, bitFraming)                   ' Bit adjustments
         PCD_WriteRegister(CommandReg, cmd)                             ' Execute the command
-        
+
         if (cmd = PCD_Transceive) then
             PCD_SetRegisterBitMask(BitFramingReg, 0x80)            ' StartSend=1, transmission of data starts
         end if
+        
 
         ' Wait for the command to complete.
         ' In PCD_Init() we set the TAuto flag in TModeReg. This means the timer automatically starts when the PCD stops transmitting.
@@ -423,26 +431,27 @@ sub function PCD_CommunicateWithPICC(  dim cmd as byte,dim waitIRq as byte,dim s
         ' TODO check/modify for other architectures than Arduino Uno 16bit
         for i = 2000 to 0 step -1
             n = PCD_ReadRegister(ComIrqReg)         ' ComIrqReg[7..0] bits are: Set1 TxIRq RxIRq IdleIRq HiAlertIRq LoAlertIRq ErrIRq TimerIRq
+
             if (n and waitIRq) then                       ' One of the interrupts that signal success has been set.
                 break
             end if
             if (n and 0x01) then                          ' Timer interrupt - nothing received in 25ms
                 result = STATUS_TIMEOUT
-                return
+                exit
             end if
         next i
 
         ' 35.7ms and nothing happend. Communication with the MFRC522 might be down.
         if (i = 0) then
            result = STATUS_TIMEOUT
-           return
+           exit
         end if
 
         ' Stop now if any errors except collisions were detected.
         errorRegValue = PCD_ReadRegister(ErrorReg) ' ErrorReg[7..0] bits are: WrErr TempErr reserved BufferOvfl CollErr CRCErr ParityErr ProtocolErr
         if (errorRegValue and 0x13) then         ' BufferOvfl ParityErr ProtocolErr
             result = STATUS_ERROR
-            return
+            exit
         end if
 
         _validBits = 0
@@ -453,7 +462,7 @@ sub function PCD_CommunicateWithPICC(  dim cmd as byte,dim waitIRq as byte,dim s
                 n = PCD_ReadRegister(FIFOLevelReg)        ' Number of bytes in the FIFO
                 if (n > backLen^) then
                     result = STATUS_NO_ROOM
-                    return
+                    exit
                 end if
                 backLen^ = n                                               ' Number of bytes returned
                 PCD_ReadRegisterBuffer(FIFODataReg, n, backData, rxAlign)        ' Get received data from FIFO
@@ -467,11 +476,11 @@ sub function PCD_CommunicateWithPICC(  dim cmd as byte,dim waitIRq as byte,dim s
         ' Tell about collisions
         if (errorRegValue and 0x08) then                'CollErr
            result = STATUS_COLLISION
-           return
+           exit
         end if
 
         result = STATUS_OK
-        return
+        exit
 end sub
 
 end.
