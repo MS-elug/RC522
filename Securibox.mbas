@@ -17,7 +17,6 @@ program Securibox
 
 include RC522
 
-
 sub procedure initMain()
    TRISA = 0x00                   ' A en sortie
    TRISB = 0x00                   ' B en sortie
@@ -44,40 +43,53 @@ sub procedure initMain()
    CM1CON0.7=0                                   ' comparateurs arr?t?s
    CM2CON0.7=0                                   ' comparateurs arr?t?s
 
-                        ' Initialize UART module at 9600 bps
-                  ' Carriage Return
-
-
   'RC522_SS_PIN = 1
   'RC522_RST_PIN = 0
   ' MFRC522 accept upto 10MHz
-  SPI1_Init_Advanced(_SPI_MASTER_OSC_DIV64, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_LOW_2_HIGH)                            ' Initialize SPI1 module
+  SPI1_Init_Advanced(_SPI_MASTER_OSC_DIV64, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_LOW_2_HIGH) ' Initialize SPI1 module
   PCD_Init()
-  'UART1_Init(9600)
+  
+  #IFDEF DEBUG_TO_UART_MODE THEN 'Initialize UART
+      UART1_Init(9600)
+  #ENDIF
+
 end sub
 
  
 main:
-     dim i as word
-'   Main program
-     initMain()
+  dim i as word
+  #IFDEF DEBUG_TO_UART_MODE THEN
+  dim txt as string[2]
+  #ENDIF
 
+  initMain()
+  while(true)
+    delay_ms(500)
+    
+    if(not PICC_IsNewCardPresent()) then
+      UART1_Write_Text("Card not found\n")
+      LATC.1 = 0
+      continue
+    end if
+    
+    UART1_Write_Text("Card found\n")
+    LATC.1 = 1
+    
+    if(not PICC_ReadCardSerial()) then
+      UART1_Write_Text("Cannot read the card\n")
+      LATC.1 = 0
+      continue
+    end if
 
-     ' Fait clignoter la LED de status
-   for i=1 to 500
-                                        ' Led en vert
-     delay_ms(500)
-     if(PICC_IsNewCardPresent()) then
-          LATC.1 = 1
-     else
-           LATC.1 = 0
-     end if
-
-     delay_ms(500)
-
-  'UART1_Write_Text("Ready")
-  'UART1_Write(10)                      ' Line Feed
-  'UART1_Write(13)
-  next i
+    #IFDEF DEBUG_TO_UART_MODE THEN
+    UART1_Write_Text("UID card is ")
+    for i=0 to 9
+      ByteToHex(uid.uidByte[i], txt)
+      UART1_Write_Text(txt)
+      UART1_Write_Text(" ")
+    next if
+    UART1_Write_Text(".\n")
+    #ENDIF
+  wend
   
 end.
