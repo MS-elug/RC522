@@ -141,7 +141,7 @@ module RC522
   dim uid as UIDStruct  ' Used by PICC_ReadCardSerial().
 
 
-  sub procedure PCD_Init
+  sub procedure PCD_Init()
   sub procedure PCD_WriteRegister(dim reg as byte, dim value as byte)
   sub procedure PCD_WriteRegisterBuffer(dim reg as byte,dim count as byte, dim values as ^byte)
   sub function PCD_ReadRegister (dim reg as byte) as byte
@@ -177,6 +177,7 @@ implements
        ByteToHex(reg, txt)
        UART1_Write_Text("to reg:0x")
        UART1_Write_Text(txt)
+       UART1_Write(0x0A)
     #ENDIF
     RC522_SS_PIN = 0              ' Select slave
     SPI_Write(reg)                  ' MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
@@ -282,11 +283,11 @@ implements
  sub function PCD_CalculateCRC(dim buffer as ^byte, dim bufferSize as byte, dim crc as ^byte) as byte
     dim i as word
     dim n as byte
-    PCD_WriteRegister(CommandReg, PCD_Idle) 		' Stop any active command.
-    PCD_WriteRegister(DivIrqReg, 0x04) 			' Clear the CRCIRq interrupt request bit
-    PCD_WriteRegister(FIFOLevelReg, 0x80) 		' FlushBuffer = 1, FIFO initialization
-    PCD_WriteRegisterBuffer(FIFODataReg, bufferSize, buffer) 	' Write data to the FIFO
-    PCD_WriteRegister(CommandReg, PCD_CalcCRC) 		' Start the calculation
+    PCD_WriteRegister(CommandReg, PCD_Idle)                 ' Stop any active command.
+    PCD_WriteRegister(DivIrqReg, 0x04)                         ' Clear the CRCIRq interrupt request bit
+    PCD_WriteRegister(FIFOLevelReg, 0x80)                 ' FlushBuffer = 1, FIFO initialization
+    PCD_WriteRegisterBuffer(FIFODataReg, bufferSize, buffer)         ' Write data to the FIFO
+    PCD_WriteRegister(CommandReg, PCD_CalcCRC)                 ' Start the calculation
 
     ' Wait for the CRC calculation to complete. Each iteration of the while-loop takes 17.73µs.
     ' TODO check/modify for other architectures than Arduino Uno 16bit
@@ -295,8 +296,8 @@ implements
     for i = 0 to 5000
       ' DivIrqReg[7..0] bits are: Set2 reserved reserved MfinActIRq reserved CRCIRq reserved reserved
       n = PCD_ReadRegister(DivIrqReg)
-      if (n and 0x04) then				' CRCIRq bit set - calculation done
-        PCD_WriteRegister(CommandReg, PCD_Idle)	' Stop calculating CRC for new content in the FIFO.
+      if (n and 0x04) then                                ' CRCIRq bit set - calculation done
+        PCD_WriteRegister(CommandReg, PCD_Idle)        ' Stop calculating CRC for new content in the FIFO.
         ' Transfer the result from the registers to the result buffer
         crc^ = PCD_ReadRegister(CRCResultRegL) 'crc^ points to 'crc[0]
         Inc(crc)
@@ -348,7 +349,11 @@ implements
     PCD_WriteRegister(TxASKReg, 0x40)' Default 0x00. Force a 100 % ASK modulation independent of the ModGsPReg register setting
     PCD_WriteRegister(ModeReg, 0x3D)' Default 0x3F. Set the preset value for the CRC coprocessor for the CalcCRC command to 0x6363 (ISO 14443-3 part 6.2.4)
     PCD_AntennaOn()' Enable the antenna driver pins TX1 and TX2 (they were disabled by the reset)
-
+    
+    #IFDEF DEBUG_TO_UART_MODE THEN
+          UART1_Write_Text("RC522 init Done")
+          UART1_Write(0x0A)
+    #ENDIF
   end sub
 
   ' Turns the antenna on by enabling pins TX1 and TX2.
@@ -428,7 +433,8 @@ end sub
       dim n as byte
       
       #IFDEF DEBUG_TO_UART_MODE THEN
-         UART1_Write_Text("PCD_CommunicateWithPICC: Starts\n")
+         UART1_Write_Text("PCD_CommunicateWithPICC: Starts")
+         UART1_Write(0x0A)
       #ENDIF
       
       if(validBits) then
@@ -462,13 +468,15 @@ end sub
 
           if (n and waitIRq) then                       ' One of the interrupts that signal success has been set.
               #IFDEF DEBUG_TO_UART_MODE THEN
-               UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_TIMEOUT:  One of the interrupts that signal success has been set.\n")
+               UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_TIMEOUT:  One of the interrupts that signal success has been set.")
+               UART1_Write(0x0A)
               #ENDIF
               break
           end if
           if (n and 0x01) then                          ' Timer interrupt - nothing received in 25ms
               #IFDEF DEBUG_TO_UART_MODE THEN
-               UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_TIMEOUT: Timer interrupt - nothing received in 25ms\n")
+               UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_TIMEOUT: Timer interrupt - nothing received in 25ms")
+               UART1_Write(0x0A)
               #ENDIF
               result = STATUS_TIMEOUT
               exit
@@ -477,7 +485,8 @@ end sub
 
       if (i = 0) then
          #IFDEF DEBUG_TO_UART_MODE THEN
-           UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_TIMEOUT:35.7ms and nothing happend. Communication with the MFRC522 might be down.\n")
+           UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_TIMEOUT:35.7ms and nothing happend. Communication with the MFRC522 might be down.")
+           UART1_Write(0x0A)
          #ENDIF
          result = STATUS_TIMEOUT
          exit
@@ -487,7 +496,8 @@ end sub
       errorRegValue = PCD_ReadRegister(ErrorReg) ' ErrorReg[7..0] bits are: WrErr TempErr reserved BufferOvfl CollErr CRCErr ParityErr ProtocolErr
       if (errorRegValue and 0x13) then         ' BufferOvfl ParityErr ProtocolErr
           #IFDEF DEBUG_TO_UART_MODE THEN
-           UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_ERROR:BufferOvfl ParityErr ProtocolErr.\n")
+           UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_ERROR:BufferOvfl ParityErr ProtocolErr.")
+           UART1_Write(0x0A)
           #ENDIF
           result = STATUS_ERROR
           exit
@@ -501,7 +511,8 @@ end sub
               n = PCD_ReadRegister(FIFOLevelReg)        ' Number of bytes in the FIFO
               if (n > backLen^) then
                   #IFDEF DEBUG_TO_UART_MODE THEN
-                   UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_NO_ROOM:Number of bytes in the FIFO\n")
+                   UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_NO_ROOM:Number of bytes in the FIFO")
+                   UART1_Write(0x0A)
                   #ENDIF
                   result = STATUS_NO_ROOM
                   exit
@@ -518,7 +529,8 @@ end sub
       ' Tell about collisions
       if (errorRegValue and 0x08) then                'CollErr
          #IFDEF DEBUG_TO_UART_MODE THEN
-           UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_COLLISION:CollErr\n")
+           UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_COLLISION:CollErr")
+           UART1_Write(0x0A)
          #ENDIF
          result = STATUS_COLLISION
          exit
@@ -526,7 +538,8 @@ end sub
 
       result = STATUS_OK
       #IFDEF DEBUG_TO_UART_MODE THEN
-         UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_OK: Ends\n")
+         UART1_Write_Text("PCD_CommunicateWithPICC_STATUS_OK: Ends")
+         UART1_Write(0x0A)
       #ENDIF
    end sub
 
@@ -550,7 +563,8 @@ end sub
     #ENDIF
     if ((bufferATQA = 0) or (bufferSize^ < 2)) then        'The ATQA response is 2 bytes long.
       #IFDEF DEBUG_TO_UART_MODE THEN
-         UART1_Write_Text("PICC_REQA_or_WUPA_STATUS_NO_ROOM: The ATQA response is 2 bytes long.\n")
+         UART1_Write_Text("PICC_REQA_or_WUPA_STATUS_NO_ROOM: The ATQA response is 2 bytes long.")
+         UART1_Write(0x0A)
       #ENDIF
       result = STATUS_NO_ROOM
       exit
@@ -565,13 +579,15 @@ end sub
          ByteToHex(result, txt)
          UART1_Write_Text("PICC_REQA_or_WUPA_STATUS_ERROR: status= 0x")
          UART1_Write_Text(txt)
-         UART1_Write_Text(".\n")
+         UART1_Write_Text(".")
+         UART1_Write(0x0A)
       #ENDIF
       exit
     end if
     if ((bufferSize^ <> 2) or (validBits <> 0)) then 'ATQA must be exactly 16 bits.
       #IFDEF DEBUG_TO_UART_MODE THEN
-         UART1_Write_Text("PICC_REQA_or_WUPA_STATUS_ERROR: ATQA must be exactly 16 bits.\n")
+         UART1_Write_Text("PICC_REQA_or_WUPA_STATUS_ERROR: ATQA must be exactly 16 bits.")
+         UART1_Write(0x0A)
       #ENDIF
       result = STATUS_ERROR
       exit
@@ -623,7 +639,8 @@ end sub
 
     #IFDEF DEBUG_TO_UART_MODE THEN
          dim txt as string[2]
-         UART1_Write_Text("PICC_Select: Starts.\n")
+         UART1_Write_Text("PICC_Select: Starts.")
+         UART1_Write(0x0A)
     #ENDIF
     cascadeLevel = 1
    ' Description of buffer structure:
@@ -681,7 +698,8 @@ end sub
 
       if ((cascadeLevel <> 1) and (cascadeLevel <> 2) and (cascadeLevel <> 3)) then
           #IFDEF DEBUG_TO_UART_MODE THEN
-               UART1_Write_Text("PICC_Select_STATUS_INTERNAL_ERROR:.\n")
+               UART1_Write_Text("PICC_Select_STATUS_INTERNAL_ERROR:.")
+               UART1_Write(0x0A)
           #ENDIF
           status = STATUS_INTERNAL_ERROR
           exit
@@ -739,7 +757,8 @@ end sub
                  ByteToHex(result, txt)
                  UART1_Write_Text("PICC_Select_STATUS_ERROR: status= 0x")
                  UART1_Write_Text(txt)
-                 UART1_Write_Text(".\n")
+                 UART1_Write_Text(".")
+                 UART1_Write(0x0A)
               #ENDIF
                exit
             end if
@@ -774,6 +793,7 @@ end sub
             if (valueOfCollReg and 0x20) then ' CollPosNotValid
                #IFDEF DEBUG_TO_UART_MODE THEN
                  UART1_Write_Text("PICC_Select_STATUS_COLLISION: Without a valid collision position we cannot continue")
+                 UART1_Write(0x0A)
                #ENDIF
                result = STATUS_COLLISION ' Without a valid collision position we cannot continue
                exit
@@ -786,6 +806,7 @@ end sub
             if (collisionPos <= currentLevelKnownBits) then ' No progress - should not happen
                #IFDEF DEBUG_TO_UART_MODE THEN
                  UART1_Write_Text("PICC_Select_STATUS_INTERNAL_ERROR: No progress - should not happen")
+                 UART1_Write(0x0A)
                #ENDIF
                result = STATUS_INTERNAL_ERROR
                exit
@@ -806,7 +827,8 @@ end sub
                  ByteToHex(result, txt)
                  UART1_Write_Text("PICC_Select_STATUS_ERROR: status= 0x")
                  UART1_Write_Text(txt)
-                 UART1_Write_Text(".\n")
+                 UART1_Write_Text(".")
+                 UART1_Write(0x0A)
               #ENDIF
               exit
             else
@@ -846,6 +868,7 @@ end sub
       if ((responseLength <> 3) or (txLastBits <> 0)) then ' SAK must be exactly 24 bits (1 byte + CRC_A).
          #IFDEF DEBUG_TO_UART_MODE THEN
            UART1_Write_Text("PICC_Select_STATUS_ERROR: SAK must be exactly 24 bits (1 byte + CRC_A)")
+           UART1_Write(0x0A)
          #ENDIF
          result = STATUS_ERROR
          exit
@@ -857,7 +880,8 @@ end sub
            ByteToHex(result, txt)
            UART1_Write_Text("PICC_Select_STATUS_ERROR: PCD_CalculateCRC for CRC_A failed")
            UART1_Write_Text(txt)
-           UART1_Write_Text(".\n")
+           UART1_Write_Text(".")
+           UART1_Write(0x0A)
         #ENDIF
          exit
       end if
@@ -866,6 +890,7 @@ end sub
       if (buffer[2] <> responseBuffer^) then
          #IFDEF DEBUG_TO_UART_MODE THEN
            UART1_Write_Text("PICC_Select_STATUS_CRC_WRONG: buffer[2] <> responseBuffer[1]")
+           UART1_Write(0x0A)
          #ENDIF
          result = STATUS_CRC_WRONG
          exit
@@ -874,6 +899,7 @@ end sub
       if (buffer[3] <> responseBuffer^) then
          #IFDEF DEBUG_TO_UART_MODE THEN
            UART1_Write_Text("PICC_Select_STATUS_CRC_WRONG: buffer[3] <> responseBuffer[2]")
+           UART1_Write(0x0A)
          #ENDIF
          result = STATUS_CRC_WRONG
          exit

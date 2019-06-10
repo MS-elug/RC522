@@ -1,3 +1,5 @@
+#DEFINE DEBUG_TO_UART_MODE
+
 program Securibox
 
 '*******************************************************************************
@@ -45,13 +47,16 @@ sub procedure initMain()
 
   'RC522_SS_PIN = 1
   'RC522_RST_PIN = 0
-  ' MFRC522 accept upto 10MHz
-  SPI1_Init_Advanced(_SPI_MASTER_OSC_DIV64, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_LOW_2_HIGH) ' Initialize SPI1 module
-  PCD_Init()
   
   #IFDEF DEBUG_TO_UART_MODE THEN 'Initialize UART
       UART1_Init(9600)
   #ENDIF
+  
+  ' MFRC522 accept upto 10MHz
+  SPI1_Init_Advanced(_SPI_MASTER_OSC_DIV64, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_LOW_2_HIGH) ' Initialize SPI1 module
+  PCD_Init()
+  
+
 
 end sub
 
@@ -65,30 +70,39 @@ main:
   initMain()
   while(true)
     delay_ms(500)
-    
+
     if(not PICC_IsNewCardPresent()) then
-      UART1_Write_Text("Card not found\n")
+      #IFDEF DEBUG_TO_UART_MODE THEN
+             UART1_Write_Text("Card not found")
+             UART1_Write(0x0A)
+      #ENDIF
       LATC.1 = 0
       continue
     end if
     
-    UART1_Write_Text("Card found\n")
+    #IFDEF DEBUG_TO_UART_MODE THEN
+      UART1_Write_Text("Card found - Reading uid")
+      UART1_Write(0x0A)
+    #ENDIF
     LATC.1 = 1
     
     if(not PICC_ReadCardSerial()) then
-      UART1_Write_Text("Cannot read the card\n")
+      #IFDEF DEBUG_TO_UART_MODE THEN
+             UART1_Write_Text("Cannot read the card")
+             UART1_Write(0x0A)
+      #ENDIF
       LATC.1 = 0
       continue
     end if
 
     #IFDEF DEBUG_TO_UART_MODE THEN
     UART1_Write_Text("UID card is ")
-    for i=0 to 9
+    for i=0 to uid.size - 1
       ByteToHex(uid.uidByte[i], txt)
       UART1_Write_Text(txt)
       UART1_Write_Text(" ")
-    next if
-    UART1_Write_Text(".\n")
+    next i
+    UART1_Write(0x0A)
     #ENDIF
   wend
   
