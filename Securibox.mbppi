@@ -1,6 +1,6 @@
 [DEVICE]
 Name=P18F45K22
-Clock=16000000
+Clock=64000000
 [MEMORY_MODEL]
 Value=0
 [BUILD_TYPE]
@@ -51,6 +51,7 @@ Count=2
 [LIB_EXPANDED_NODES]
 0=mikroE Libraries
 1=System Libraries
+7=Button
 197=Keypad4x4
 352=SPI
 599=String
@@ -58,4 +59,4 @@ Count=2
 886=mikroSDK Libraries
 887=mikroBUS Board Definition API
 889=Additional Libraries
-Count=9
+Count=10

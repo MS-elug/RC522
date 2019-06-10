@@ -1,4 +1,4 @@
-#DEFINE DEBUG_TO_UART_MODE
+'#DEFINE DEBUG_TO_UART_MODE
 
 module RC522
 ' ******************
@@ -131,15 +131,8 @@ module RC522
     dim sak as byte               ' The SAK (Select acknowledge) byte returned from the PICC after successful selection.
   end structure
   
-  ' Link variable to IOPort
-  dim RC522_SS_PIN as sbit at LATC.0
-  dim RC522_SS_PIN_TRIS as sbit at TRISC.0
-  dim RC522_RST_PIN as sbit at LATC.1
-  dim RC522_RST_PIN_TRIS as sbit at TRISC.1
-  
   'Members
   dim uid as UIDStruct  ' Used by PICC_ReadCardSerial().
-
 
   sub procedure PCD_Init()
   sub procedure PCD_WriteRegister(dim reg as byte, dim value as byte)
@@ -159,6 +152,12 @@ module RC522
   sub function PICC_Select(dim uid as ^UIDStruct) as byte
 implements
 
+  ' Link variable to IOPort
+  dim RC522_SS_PIN as sbit at LATC.0
+  dim RC522_SS_PIN_TRIS as sbit at TRISC.0
+  dim RC522_RST_PIN as sbit at LATC.1
+  dim RC522_RST_PIN_TRIS as sbit at TRISC.1
+  
 '/////////////////////////////////////////////////////////////////////////////////////
 '// Basic interface functions for communicating with the MFRC522
 '/////////////////////////////////////////////////////////////////////////////////////
@@ -175,7 +174,7 @@ implements
        UART1_Write_Text(txt)
        
        ByteToHex(reg, txt)
-       UART1_Write_Text("to reg:0x")
+       UART1_Write_Text(" to reg:0x")
        UART1_Write_Text(txt)
        UART1_Write(0x0A)
     #ENDIF

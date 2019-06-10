@@ -7,26 +7,23 @@ program Securibox
 '   PIC 18F45K22
 '   Quartz 16 MHz + PLL X4  => 64.0000 MHz
 '
+'  C.0 = Slave Select pin to connect to SS input of RC522
+'  C.1 = Slave Reset pin to connect to RST input of RC522
+'  Optional:
+'  C.6 = UART TX output
+'  C.7 = UART RX input
 '*******************************************************************************
-'
-'   Simulateur d'un encodeur moteur en fonction d'une tension de commande -10V / +10V
-'
-'*******************************************************************************
-'
-'   Date de revision :  06/05/2018
-'
-' ******************************************************************************
 
 include RC522
 
 sub procedure initMain()
-   TRISA = 0x00                   ' A en sortie
-   TRISB = 0x00                   ' B en sortie
-   TRISC = %00010000                   ' C en sortie
+   TRISA = %00000000                   ' A en sortie
+   TRISB = %00000000                   ' B en sortie
+   TRISC = %00000000                ' C en sortie
 
-   PORTA = 0x00                   ' initialize Port A
-   PORTB = 0x00                   ' initialize Port B
-   PORTC = 0x00 '%00000000                   ' initialize Port C
+   PORTA = %00000000                   ' initialize Port A
+   PORTB = %00000000                   ' initialize Port B
+   PORTC = %00000000                   ' initialize Port C
 
    TRISE = 0x00
    PORTE = 0x00                                     ' initialize port E
@@ -52,12 +49,12 @@ sub procedure initMain()
       UART1_Init(9600)
   #ENDIF
   
-  ' MFRC522 accept upto 10MHz
-  SPI1_Init_Advanced(_SPI_MASTER_OSC_DIV64, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_LOW_2_HIGH) ' Initialize SPI1 module
+  ' Init RC522 chip
+  ' /!\ DO NOT FORGET TO UPDATE POINTER RC522_SS_PIN,RC522_SS_PIN_TRIS,RC522_RST_PIN and RC522_RST_PIN_TRIS in RC522.mbas
+  ' MFRC522 accept upto 10MHz SPI clock
+  SPI1_Init_Advanced(_SPI_MASTER_OSC_DIV16, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_LOW_2_HIGH)
   PCD_Init()
   
-
-
 end sub
 
  
@@ -69,14 +66,9 @@ main:
 
   initMain()
   while(true)
-    delay_ms(500)
+    delay_ms(200)
 
     if(not PICC_IsNewCardPresent()) then
-      #IFDEF DEBUG_TO_UART_MODE THEN
-             UART1_Write_Text("Card not found")
-             UART1_Write(0x0A)
-      #ENDIF
-      LATC.1 = 0
       continue
     end if
     
@@ -84,25 +76,31 @@ main:
       UART1_Write_Text("Card found - Reading uid")
       UART1_Write(0x0A)
     #ENDIF
-    LATC.1 = 1
-    
+
     if(not PICC_ReadCardSerial()) then
       #IFDEF DEBUG_TO_UART_MODE THEN
-             UART1_Write_Text("Cannot read the card")
-             UART1_Write(0x0A)
+         UART1_Write_Text("Cannot read the card")
+         UART1_Write(0x0A)
       #ENDIF
-      LATC.1 = 0
       continue
     end if
 
+    if(uid.size <> 4) then
+      #IFDEF DEBUG_TO_UART_MODE THEN
+         UART1_Write_Text("Card not supported")
+         UART1_Write(0x0A)
+      #ENDIF
+      continue
+    
+    end if
     #IFDEF DEBUG_TO_UART_MODE THEN
-    UART1_Write_Text("UID card is ")
-    for i=0 to uid.size - 1
-      ByteToHex(uid.uidByte[i], txt)
-      UART1_Write_Text(txt)
-      UART1_Write_Text(" ")
-    next i
-    UART1_Write(0x0A)
+      UART1_Write_Text("UID card is ")
+      for i=0 to uid.size - 1
+        ByteToHex(uid.uidByte[i], txt)
+        UART1_Write_Text(txt)
+        UART1_Write_Text(" ")
+      next i
+      UART1_Write(0x0A)
     #ENDIF
   wend
   
