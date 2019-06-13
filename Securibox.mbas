@@ -16,15 +16,25 @@ program Securibox
 
 include RC522
 
+
+    ' MMC module connections
+dim Mmc_Chip_Select as sbit at PORTE.0
+dim Mmc_Chip_Select_Direction as sbit at TRISE.0
+
+' MMC module connections
+
+dim Mmc_Card_Detect as sbit at PORTA.2
+dim Mmc_Card_Detect_Direction as sbit at TRISA.2
+
 sub procedure initMain()
    TRISA = %00000000                   ' A en sortie
    TRISB = %00000000                   ' B en sortie
    TRISC = %00000000                ' C en sortie
-
+   TRISE = %00000000                ' C en sortie
    PORTA = %00000000                   ' initialize Port A
    PORTB = %00000000                   ' initialize Port B
    PORTC = %00000000                   ' initialize Port C
-
+   PORTE = %00000000                   ' initialize Port C
    TRISE = 0x00
    PORTE = 0x00                                     ' initialize port E
 
@@ -38,7 +48,8 @@ sub procedure initMain()
    ANSELA = 0x00
    ANSELB = 0x00                      ' aucune entr?e analogique en B
    ANSELC = 0x00                      ' aucune entr?e analogique en C
-   
+   ANSELE = 0x00
+
    CM1CON0.7=0                                   ' comparateurs arr?t?s
    CM2CON0.7=0                                   ' comparateurs arr?t?s
 
@@ -52,43 +63,204 @@ sub procedure initMain()
   ' Init RC522 chip
   ' /!\ DO NOT FORGET TO UPDATE POINTER RC522_SS_PIN,RC522_SS_PIN_TRIS,RC522_RST_PIN and RC522_RST_PIN_TRIS in RC522.mbas
   ' MFRC522 accept upto 10MHz SPI clock
-  SPI1_Init_Advanced(_SPI_MASTER_OSC_DIV16, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_LOW_2_HIGH)
-  PCD_Init()
+  'SPI1_Init_Advanced(_SPI_MASTER_OSC_DIV16, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_LOW_2_HIGH)
+  'PCD_Init()
   
 end sub
 
- 
+#IFDEF DEBUG_TO_UART_MODE THEN
+  ' UART write text and new line (carriage return + line feed)
+  sub procedure UART1_Write_Line( dim byref uart_text as string )
+    UART1_Write_Text(uart_text)
+    UART1_Write(13)
+    UART1_Write(10)
+  end sub
+#ENDIF
+
+const LINE_LEN = 43
+
+dim
+  err_txt as string[20]
+  file_contents as string[LINE_LEN]
+  filename as string[14] ' File names
+  loop_, loop2 as byte
+  
+'-------------- Creates new file and writes some data to it
+sub procedure M_Create_New_File()
+  filename[6] = "A"                ' Set filename for single-file tests
+  Mmc_Fat_Set_File_Date(2010, 4, 19, 9, 0, 0)    ' Set file date & time info
+  Mmc_Fat_Assign(filename, 0xA0)   ' Will not find file and then create file
+  Mmc_Fat_Rewrite                  ' To clear file and start with new data
+  for loop_=1 to 99                '  We want 5 files on the MMC card
+    UART1_Write(".")
+    file_contents[0] = loop_ div 10 + 48
+    file_contents[1] = loop_ mod 10 + 48
+    Mmc_Fat_Write(file_contents, LINE_LEN-1)   ' write data to the assigned file
+  next loop_
+end sub
+
+'-------------- Opens an existing file, reads data from it and puts it to USART
+sub procedure M_Open_AuthFile_Read()
+  dim  authfilename as string[20]
+  dim character as byte
+  dim error as byte
+  dim size as longword
+  #IFDEF DEBUG_TO_UART_MODE THEN
+  dim txt as string[20]
+  #ENDIF
+
+  authfilename = "auth.csv"
+  
+  error =  Mmc_Fat_Assign(authfilename, 0x01) ' Read only
+  #IFDEF DEBUG_TO_UART_MODE THEN
+  if (error = 2) then
+      UART1_Write_Line("   there are no more free file handlers, currently opened file is closed in order to free space.")
+   else
+      if (error = 1) then
+          UART1_Write_Line("   file already exists or file does not exist but a new file is created")
+      else
+          'TODO ERROR
+          UART1_Write_Line("   file does not exist and no new file is created")
+      end if
+  end if
+  #ENDIF
+  
+  Mmc_Fat_Reset(size)            ' To read file, sub procedure returns size of file
+  #IFDEF DEBUG_TO_UART_MODE THEN
+    LongWordToStr(size, txt)
+    UART1_Write_Text("Size is ")
+    UART1_Write_Line(txt)       ' Write data to UART
+  #ENDIF
+  while size > 0
+    Mmc_Fat_Read(character)
+    'UART1_Write(character)       ' Write data to UART
+    Dec(size)
+  wend
+  #IFDEF DEBUG_TO_UART_MODE THEN
+  UART1_Write_Text("Read completed")
+  #ENDIF
+end sub
+
+
 main:
   dim i as word
+  dim error as byte
+
+
+
   #IFDEF DEBUG_TO_UART_MODE THEN
   dim txt as string[2]
   #ENDIF
 
   initMain()
+  TRISA.2 = 1
+  LATA.3 = PORTA.2
+  
+  file_contents = "XX MMC/SD FAT16 library by Anton Rieckert#"
+  file_contents[41] = 10          ' newline
+  filename = "MIKRO00.TXT"
+
+  Mmc_Card_Detect_Direction = 1   ' Set card detection pin to be input
+    ' Initialize SPI1 module and set pointer(s) to SPI1 functions
+  'SPI1_Init_Advanced(_SPI_MASTER_OSC_DIV64, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_LOW_2_HIGH)
+  SPI1_Init_Advanced(_SPI_MASTER_OSC_DIV4, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_LOW_2_HIGH)
+
   while(true)
     delay_ms(200)
 
+    UART1_Write_Line("Insert microSD Card")
+    LATA.3 = PORTA.2
+    while(Mmc_Card_Detect)
+       LATA.3 = PORTA.2
+       UART1_Write_Line("Not detected")
+       delay_ms(500)
+    wend
+    LATA.3 = PORTA.2
+    delay_ms(500)
+    UART1_Write_Line("SD Card Detected")
+
+    ' Initialize MMC card
+      error = Mmc_Init()
+      delay_ms(500)
+      error = Mmc_Init()
+      if(error = 0) then
+        UART1_Write_Line("   MMC Init-OK")    ' If MMC present report
+
+        ' CID Card IDentification number register
+        ' CSD Card Specific Data register
+        ' use fat16 quick format instead of init routine if a formatting is needed
+        ' 0 - if MMC/SD card was detected and successfully initialized
+        ' 1 - if FAT16 boot sector was not found
+        ' 255 - if MMC/SD card was not detected
+        error = Mmc_Fat_Init()
+        if error = 0 then
+           UART1_Write_Line("   SD card was detected and successfully initialized")
+           
+           ' Format and initialize MMC/SD card and MMC_FAT16 library globals
+           'error = Mmc_Fat_QuickFormat("mikroE")
+           'if (error = 0) then
+           '   UART1_Write_Line("   SD card was detected, successfully formated and initialized ")
+           'else
+           '   if (error = 1) then
+           '       UART1_Write_Line("   FAT16 format was unsuccessful")
+           '   else
+           '       UART1_Write_Line("   MMC/SD card was not detected ")
+           '   end if
+           'end if
+
+           ' reinitialize spi at higher speed
+           SPI1_Init_Advanced(_SPI_MASTER_OSC_DIV4, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_LOW_2_HIGH)
+           'M_Create_New_File()
+           M_Open_AuthFile_Read()
+        else
+            if error = 1 then
+                UART1_Write_Line("   FAT16 boot sector was not found")    ' If MMC present report
+                
+                 ' Format and initialize MMC/SD card and MMC_FAT16 library globals
+            '     error = Mmc_Fat_QuickFormat("mikroE")
+            '     if (error = 0) then
+            '        UART1_Write_Line("   SD card was detected, successfully formated and initialized ")
+            '     else
+            '          if (error = 1) then
+            '              UART1_Write_Line("   FAT16 format was unsuccessful")
+            '          else
+            '              UART1_Write_Line("   MMC/SD card was not detected ")
+            '          end if
+            '     end if
+            else
+                UART1_Write_Line("   SD card was not detected")    ' If MMC present report
+            end if
+        end if
+     else
+        UART1_Write_Text("   MMC Init-error: err=0x") ' If error report
+        ByteToHex(error, txt)
+        UART1_Write_Line(txt)
+     end if
+
+    UART1_Write_Line("   Please remove card")
+    while(not Mmc_Card_Detect)
+       delay_ms(100)
+    wend
+    
+    continue
     if(not PICC_IsNewCardPresent()) then
       continue
     end if
     
     #IFDEF DEBUG_TO_UART_MODE THEN
-      UART1_Write_Text("Card found - Reading uid")
-      UART1_Write(0x0A)
+      UART1_Write_Line("Card found - Reading uid")
     #ENDIF
 
     if(not PICC_ReadCardSerial()) then
       #IFDEF DEBUG_TO_UART_MODE THEN
-         UART1_Write_Text("Cannot read the card")
-         UART1_Write(0x0A)
+         UART1_Write_Line("Cannot read the card")
       #ENDIF
       continue
     end if
 
     if(uid.size <> 4) then
       #IFDEF DEBUG_TO_UART_MODE THEN
-         UART1_Write_Text("Card not supported")
-         UART1_Write(0x0A)
+         UART1_Write_Line("Card not supported")
       #ENDIF
       continue
     
@@ -100,7 +272,6 @@ main:
         UART1_Write_Text(txt)
         UART1_Write_Text(" ")
       next i
-      UART1_Write(0x0A)
     #ENDIF
   wend
   
